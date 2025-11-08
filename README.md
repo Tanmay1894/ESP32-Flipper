@@ -6,8 +6,8 @@ This project is an wireless attack and scanning suite for the ESP32 platform, fe
 
 Features:
 
-    1. Multi-Channel Burst WiFi Deauth/Disassociation
-        1. Sends high-rate deauth/disassoc packets across all major WiFi channels (2.4 GHz, channels 1–13) for maximum disruption (2000+ packets/sec).
+    1. Multi-Channel Burst WiFi Deauth
+        1. Sends high-rate deauth packets across all major WiFi channels (2.4 GHz, channels 1–13) for maximum disruption (2000+ packets/sec).
         2. Multi-channel hopping and true ESP32 packet injection using esp_wifi_80211_tx.
         
     2. WiFi Network Scanner
